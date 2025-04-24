@@ -1,26 +1,27 @@
-import { View, Text, TextInput, Button, StyleSheet, TouchableOpacity } from 'react-native';
+import { View, Text, TextInput, Button, StyleSheet } from 'react-native';
 import { useRouter } from 'expo-router';
 import { useState } from 'react';
 import { auth } from '../firebaseConfig';
-import { signInWithEmailAndPassword } from 'firebase/auth';
+import { createUserWithEmailAndPassword } from 'firebase/auth';
 
-export default function LoginScreen() {
+export default function RegisterScreen() {
   const router = useRouter();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
 
-  const handleLogin = async () => {
+  const handleRegister = async () => {
     try {
-      await signInWithEmailAndPassword(auth, email, password);
-      router.push('/home');
+      await createUserWithEmailAndPassword(auth, email, password);
+      alert('Registration successful!');
+      router.replace('/login');
     } catch (error) {
-      alert('Login failed: ' + error.message);
+      alert('Registration failed: ' + error.message);
     }
   };
 
   return (
     <View style={styles.container}>
-      <Text style={styles.title}>Log In</Text>
+      <Text style={styles.title}>Register</Text>
 
       <TextInput
         value={email}
@@ -36,11 +37,7 @@ export default function LoginScreen() {
         placeholder="Password"
       />
 
-      <Button title="Log In" onPress={handleLogin} />
-
-      <TouchableOpacity onPress={() => router.push('/register')}>
-        <Text style={styles.link}>New here? Register</Text>
-      </TouchableOpacity>
+      <Button title="Register" onPress={handleRegister} />
     </View>
   );
 }
@@ -65,10 +62,5 @@ const styles = StyleSheet.create({
     padding: 12,
     borderRadius: 6,
     marginBottom: 16,
-  },
-  link: {
-    marginTop: 20,
-    color: '#1e40af',
-    textAlign: 'center',
   },
 });
