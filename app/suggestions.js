@@ -1,20 +1,10 @@
 import React, { useState } from 'react';
-import {
-  View,
-  Text,
-  TextInput,
-  Button,
-  ScrollView,
-  StyleSheet,
-  ActivityIndicator
-} from 'react-native';
-
+import { View, Text, TextInput, Button, ScrollView, StyleSheet, ActivityIndicator } from 'react-native';
 
 export default function SuggestionsScreen() {
   const [interests, setInterests] = useState('');
   const [suggestions, setSuggestions] = useState([]);
   const [loading, setLoading] = useState(false);
-
 
   const getSuggestions = async () => {
     if (!interests.trim()) {
@@ -22,51 +12,42 @@ export default function SuggestionsScreen() {
       return;
     }
 
-
     setLoading(true);
     setSuggestions([]);
 
-
     try {
-      const response = await fetch('http://10.135.14.128:5000/generate', { 
+      const response = await fetch('http://10.0.0.82:5000/generate', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ interests }),
       });
 
-
       const data = await response.json();
-      const parsed = typeof data.suggestions === 'string'
-        ? data.suggestions.split('\n').filter(line => line.trim())
-        : data.suggestions;
 
+      const parsed =
+        typeof data.suggestions === 'string'
+          ? data.suggestions.split('\n').filter((line) => line.trim())
+          : data.suggestions;
 
       setSuggestions(parsed);
     } catch (error) {
-      console.error("Failed to fetch suggestions:", error);
-      setSuggestions(['❌ Error fetching suggestions. Please try again.']);
+      console.error('Failed to fetch suggestions:', error);
+      setSuggestions(['❌ Error fetching suggestions. Please check your server or connection.']);
     } finally {
       setLoading(false);
     }
   };
 
-
   return (
     <ScrollView contentContainerStyle={styles.container}>
       <Text style={styles.title}>AI Travel Suggestions</Text>
-
-
       <TextInput
         style={styles.input}
-        placeholder="E.g., beaches, museums, food"
+        placeholder="E.g., beaches, mountains, food tours"
         value={interests}
         onChangeText={setInterests}
       />
-
-
       <Button title="Get Suggestions" onPress={getSuggestions} />
-
-
       {loading ? (
         <ActivityIndicator style={styles.loader} size="large" color="#0284c7" />
       ) : (
@@ -78,34 +59,14 @@ export default function SuggestionsScreen() {
   );
 }
 
-
 const styles = StyleSheet.create({
-  container: {
-    padding: 20,
-    backgroundColor: '#fff',
-  },
-  title: {
-    fontSize: 22,
-    fontWeight: 'bold',
-    marginBottom: 20,
-    textAlign: 'center',
-    color: '#1e3a8a',
-  },
+  container: { padding: 20, backgroundColor: '#fff' },
+  title: { fontSize: 22, fontWeight: 'bold', marginBottom: 20, textAlign: 'center', color: '#1e3a8a' },
   input: {
-    borderWidth: 1,
-    borderColor: '#cbd5e1',
-    borderRadius: 8,
-    padding: 12,
-    marginBottom: 16,
-    backgroundColor: '#f1f5f9',
+    borderWidth: 1, borderColor: '#cbd5e1', borderRadius: 8, padding: 12, marginBottom: 16, backgroundColor: '#f1f5f9'
   },
   suggestionItem: {
-    fontSize: 16,
-    paddingVertical: 6,
-    borderBottomWidth: 0.5,
-    borderColor: '#e2e8f0',
+    fontSize: 16, paddingVertical: 6, borderBottomWidth: 0.5, borderColor: '#e2e8f0',
   },
-  loader: {
-    marginTop: 20,
-  },
+  loader: { marginTop: 20 },
 });
