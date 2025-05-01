@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { View, Text, TextInput, TouchableOpacity, StyleSheet, ScrollView, FlatList } from 'react-native';
+import { View, Text, TextInput, TouchableOpacity, StyleSheet, ScrollView } from 'react-native';
 import { useRouter } from 'expo-router';
 import { db, auth } from '../firebaseConfig';
 import { collection, addDoc, serverTimestamp } from 'firebase/firestore';
@@ -16,16 +16,12 @@ export default function AddDestinationScreen() {
   const [year, setYear] = useState('');
   const [showSeasonDropdown, setShowSeasonDropdown] = useState(false);
   const [showYearDropdown, setShowYearDropdown] = useState(false);
-
   const [activityInput, setActivityInput] = useState('');
   const [activities, setActivities] = useState([]);
-
   const [linkInput, setLinkInput] = useState('');
   const [links, setLinks] = useState([]);
-
   const [saving, setSaving] = useState(false);
 
-  // Add or update an activity
   const addOrUpdateActivity = (text, index = null) => {
     if (text.trim()) {
       if (index !== null) {
@@ -39,7 +35,6 @@ export default function AddDestinationScreen() {
     }
   };
 
-  // Add or update a link
   const addOrUpdateLink = (text, index = null) => {
     if (text.trim()) {
       if (index !== null) {
@@ -65,9 +60,11 @@ export default function AddDestinationScreen() {
       const user = auth.currentUser;
       if (!user) {
         alert('You must be logged in.');
+        console.log('No user found');
         return;
       }
 
+      console.log('Saving to: users/' + user.uid + '/bucketlist');
       await addDoc(collection(db, 'users', user.uid, 'bucketlist'), {
         name: destinationName.trim(),
         notes: notes.trim(),
@@ -83,7 +80,7 @@ export default function AddDestinationScreen() {
       router.back();
     } catch (err) {
       console.error('Error adding destination:', err);
-      alert('Error, could not save destination.');
+      alert('Error saving destination: ' + err.message);
     } finally {
       setSaving(false);
     }
@@ -93,7 +90,6 @@ export default function AddDestinationScreen() {
     <ScrollView contentContainerStyle={styles.container}>
       <Text style={styles.title}>Add New Destination</Text>
 
-      {/* Destination Name */}
       <TextInput
         style={styles.input}
         placeholder="Destination Name"
@@ -101,7 +97,6 @@ export default function AddDestinationScreen() {
         onChangeText={setDestinationName}
       />
 
-      {/* Notes */}
       <TextInput
         style={[styles.input, styles.textArea]}
         placeholder="Notes (optional)"
@@ -110,7 +105,6 @@ export default function AddDestinationScreen() {
         multiline
       />
 
-      {/* Travel Season Picker */}
       <TouchableOpacity style={styles.input} onPress={() => setShowSeasonDropdown(!showSeasonDropdown)}>
         <Text style={{ color: season ? '#000' : '#9ca3af' }}>
           {season || 'Select Travel Season'}
@@ -120,21 +114,16 @@ export default function AddDestinationScreen() {
       {showSeasonDropdown && (
         <View style={styles.dropdown}>
           {seasons.map((item) => (
-            <TouchableOpacity 
-              key={item} 
-              style={styles.dropdownItem}
-              onPress={() => {
-                setSeason(item);
-                setShowSeasonDropdown(false);
-              }}
-            >
+            <TouchableOpacity key={item} style={styles.dropdownItem} onPress={() => {
+              setSeason(item);
+              setShowSeasonDropdown(false);
+            }}>
               <Text>{item}</Text>
             </TouchableOpacity>
           ))}
         </View>
       )}
 
-      {/* Travel Year Picker */}
       <TouchableOpacity style={styles.input} onPress={() => setShowYearDropdown(!showYearDropdown)}>
         <Text style={{ color: year ? '#000' : '#9ca3af' }}>
           {year || 'Select Travel Year'}
@@ -144,27 +133,22 @@ export default function AddDestinationScreen() {
       {showYearDropdown && (
         <View style={styles.dropdown}>
           {years.map((item) => (
-            <TouchableOpacity 
-              key={item} 
-              style={styles.dropdownItem}
-              onPress={() => {
-                setYear(item);
-                setShowYearDropdown(false);
-              }}
-            >
+            <TouchableOpacity key={item} style={styles.dropdownItem} onPress={() => {
+              setYear(item);
+              setShowYearDropdown(false);
+            }}>
               <Text>{item}</Text>
             </TouchableOpacity>
           ))}
         </View>
       )}
 
-      {/* Helpful Links */}
       <Text style={styles.subtitle}>Helpful Links</Text>
 
       <View style={styles.activityRow}>
         <TextInput
           style={[styles.input, { flex: 1 }]}
-          placeholder="Add a link (e.g., hotel, tour)"
+          placeholder="Add a link"
           value={linkInput}
           onChangeText={setLinkInput}
         />
@@ -186,13 +170,12 @@ export default function AddDestinationScreen() {
         </View>
       )}
 
-      {/* Planned Activities Checklist */}
       <Text style={styles.subtitle}>Planned Activities</Text>
 
       <View style={styles.activityRow}>
         <TextInput
           style={[styles.input, { flex: 1 }]}
-          placeholder="Add an activity (e.g., Eiffel Tower)"
+          placeholder="Add an activity"
           value={activityInput}
           onChangeText={setActivityInput}
         />
@@ -214,97 +197,28 @@ export default function AddDestinationScreen() {
         </View>
       )}
 
-      {/* Save Button */}
-      <TouchableOpacity 
-        style={styles.saveButton} 
-        onPress={handleSave} 
-        disabled={saving}
-      >
+      <TouchableOpacity style={styles.saveButton} onPress={handleSave} disabled={saving}>
         <Text style={styles.saveButtonText}>
           {saving ? 'Saving...' : 'Save Destination'}
         </Text>
       </TouchableOpacity>
-
     </ScrollView>
   );
 }
 
 const styles = StyleSheet.create({
-  container: {
-    padding: 24,
-    backgroundColor: '#fff',
-  },
-  title: {
-    fontSize: 22,
-    fontWeight: 'bold',
-    color: '#1e3a8a',
-    textAlign: 'center',
-    marginBottom: 24,
-  },
-  subtitle: {
-    fontSize: 18,
-    fontWeight: 'bold',
-    marginBottom: 8,
-    color: '#0f172a',
-  },
-  input: {
-    borderWidth: 1,
-    borderColor: '#cbd5e1',
-    borderRadius: 8,
-    padding: 12,
-    fontSize: 16,
-    backgroundColor: '#f1f5f9',
-    marginBottom: 16,
-  },
-  textArea: {
-    minHeight: 100,
-    textAlignVertical: 'top',
-  },
-  activityRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    marginBottom: 16,
-  },
-  addButton: {
-    backgroundColor: '#0284c7',
-    paddingVertical: 12,
-    paddingHorizontal: 16,
-    borderRadius: 8,
-    marginLeft: 8,
-  },
-  addButtonText: {
-    color: '#fff',
-    fontWeight: 'bold',
-  },
-  activitiesList: {
-    marginBottom: 20,
-  },
-  activityItem: {
-    fontSize: 16,
-    color: '#334155',
-    marginBottom: 6,
-  },
-  saveButton: {
-    backgroundColor: '#0284c7',
-    padding: 14,
-    borderRadius: 8,
-    alignItems: 'center',
-  },
-  saveButtonText: {
-    color: '#fff',
-    fontWeight: 'bold',
-    fontSize: 16,
-  },
-  dropdown: {
-    borderWidth: 1,
-    borderColor: '#cbd5e1',
-    backgroundColor: '#f9fafb',
-    borderRadius: 8,
-    marginBottom: 16,
-  },
-  dropdownItem: {
-    padding: 12,
-    borderBottomWidth: 1,
-    borderBottomColor: '#e5e7eb',
-  },
+  container: { padding: 24, backgroundColor: '#fff' },
+  title: { fontSize: 22, fontWeight: 'bold', color: '#1e3a8a', textAlign: 'center', marginBottom: 24 },
+  subtitle: { fontSize: 18, fontWeight: 'bold', marginBottom: 8, color: '#0f172a' },
+  input: { borderWidth: 1, borderColor: '#cbd5e1', borderRadius: 8, padding: 12, fontSize: 16, backgroundColor: '#f1f5f9', marginBottom: 16 },
+  textArea: { minHeight: 100, textAlignVertical: 'top' },
+  activityRow: { flexDirection: 'row', alignItems: 'center', marginBottom: 16 },
+  addButton: { backgroundColor: '#0284c7', paddingVertical: 12, paddingHorizontal: 16, borderRadius: 8, marginLeft: 8 },
+  addButtonText: { color: '#fff', fontWeight: 'bold' },
+  activitiesList: { marginBottom: 20 },
+  activityItem: { fontSize: 16, color: '#334155', marginBottom: 6 },
+  saveButton: { backgroundColor: '#0284c7', padding: 14, borderRadius: 8, alignItems: 'center' },
+  saveButtonText: { color: '#fff', fontWeight: 'bold', fontSize: 16 },
+  dropdown: { borderWidth: 1, borderColor: '#cbd5e1', backgroundColor: '#f9fafb', borderRadius: 8, marginBottom: 16 },
+  dropdownItem: { padding: 12, borderBottomWidth: 1, borderBottomColor: '#e5e7eb' },
 });
